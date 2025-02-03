@@ -68,3 +68,6 @@ Le `name='home'` ajoute a la fin est important car ca nous permet d'identifier u
 
 <br><br><br><br>
 Apres avoir fait tout ceci, vous pouvez lancer votre serveur de developpement: `python manage.py runserver` et naviguez vers `localhost:8000/home` pour voir votre page.
+
+<br><br>
+Il y a deja un route de test avec son template deja rendu pour vous faire mieux comprendre.

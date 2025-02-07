@@ -1,0 +1,207 @@
+{% extends 'main/sidebar_base.html' %}
+{% load i18n %}
+
+{% block events_active %}active{% endblock%}
+
+{% block page_content %}
+<section>
+    <div id="errorMessages"></div>
+
+    <div class="container-fluid pt-30">
+        <div class="tables-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card-style mb-30">
+                        <div
+                            style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 class="mb-10">Evenements</h3>
+                            </div>
+
+                            <div class="title d-flex flex-wrap justify-content-end">
+                                <button type="button" class="main-btn primary-btn btn-hover btn-sm" data-bs-toggle="modal" data-bs-target="#eventModal">
+                                    <i class="lni lni-plus mr-5"></i> Ajouter</button>
+                            </div>
+
+                        </div>
+                        <div class="table-wrapper table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th class="lead-info">
+                                            <h6>{% trans "Nom" %}</h6>
+                                        </th>
+                                        <th class="lead-email">
+                                            <h6>{% trans "Ville, pays" %}</h6>
+                                        </th>
+                                        <th class="lead-phone">
+                                            <h6>{% trans "Prix" %}</h6>
+                                        </th>
+                                        <th class="lead-company">
+                                            <h6>{% trans "Nombre de places" %}</h6>
+                                        </th>
+                                        <th class="lead-company">
+                                            <h6>{% trans "Entree libre" %}</h6>
+                                        </th>
+                                        <th>
+                                            <h6>{% trans "Action" %}</h6>
+                                        </th>
+                                    </tr>
+                                    <!-- end table row-->
+                                </thead>
+                                <tbody>
+                                    {% for evenement in evenements%}
+                                    <tr>
+                                        <td class="min-width">
+                                            <div class="lead">
+                                                <div class="lead-text">
+                                                    <p>{{ evenement.nom }}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="min-width">
+                                            <p><a href="#0">{{ evenement.ville}}, {{ evenement.pays}}</a></p>
+                                        </td>
+                                        <td class="min-width">
+                                            <p>{{ evenement.prix }}</p>
+                                        </td>
+                                        <td class="min-width">
+                                            <p>
+                                                {% if evenement.nombre_de_places %}
+                                                {{evenement.nombre_de_places}}
+                                                {% else %}
+                                                {% trans "Non specifie" %}
+                                                {% endif %}
+                                            </p>
+                                        </td>
+                                        <td>
+                                            <div class="action">
+                                                <button class="text-danger">
+                                                    <i class="lni lni-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <!-- end table -->
+                        </div>
+                    </div>
+                    <!-- end card -->
+                </div>
+                <!-- end col -->
+            </div>
+        </div>
+        <!-- Invoice Wrapper End -->
+    </div>
+    <!-- end container -->
+</section>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">{{ _('Créer un nouvel événement') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form method="post" id="eventForm">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="{{ form.nom.id_for_label }}" class="form-label">{{ form.nom.label }}</label>
+                            {{ form.nom }}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.nombres_de_places.id_for_label }}" class="form-label">{{ form.nombres_de_places.label }}</label>
+                            {{ form.nombres_de_places }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.lieu.id_for_label }}" class="form-label">{{ form.lieu.label }}</label>
+                            {{ form.lieu }}
+                        </div>
+                        <div class="col-md-3">
+                            <label for="{{ form.ville.id_for_label }}" class="form-label">{{ form.ville.label }}</label>
+                            {{ form.ville }}
+                        </div>
+                        <div class="col-md-3">
+                            <label for="{{ form.pays.id_for_label }}" class="form-label">{{ form.pays.label }}</label>
+                            {{ form.pays }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.prix.id_for_label }}" class="form-label">{{ form.prix.label }}</label>
+                            {{ form.prix }}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.rempli.id_for_label }}" class="form-label">{{ form.rempli.label }}</label>
+                            <div class="form-check">
+                                {{ form.rempli }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.entree_gratuit.id_for_label }}" class="form-label">{{ form.entree_gratuit.label }}</label>
+                            <div class="form-check">
+                                {{ form.entree_gratuit }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ _('Créer') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("eventForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent page reload
+            
+            let form = document.getElementById("eventForm");
+            let formData = new FormData(form);
+    
+            fetch("{% url 'events' %}", {  // Replace with your Django URL name
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("{{ _('Événement créé avec succès!') }}");
+                    location.reload();  // Refresh the page or update UI dynamically
+                } else {
+                    let errorDiv = document.getElementById("errorMessages");
+                    errorDiv.innerHTML = ""; // Clear previous errors
+                    for (const [field, errors] of Object.entries(data.errors)) {
+                        errors.forEach(error => {
+                            let errorElement = document.createElement("p");
+                            errorElement.style.color = "red";
+                            errorElement.innerText = `${field}: ${error}`;
+                            errorDiv.appendChild(errorElement);
+                        });
+                    }
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    });
+    </script>
+    
+{% endblock %}

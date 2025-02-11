@@ -1,13 +1,15 @@
+from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 
-from .forms import EvenementForm
+from .forms import EvenementForm, UpdateEvenementForm
 from .models import Evenement
 
 def test_view(request):
     return render(request, "main/test.html")
 
 def events(request):
+    edit_form = UpdateEvenementForm
     if request.method == 'POST':
         form = EvenementForm(request.POST)
         if form.is_valid():
@@ -18,12 +20,13 @@ def events(request):
         form = EvenementForm()
         evenements = Evenement.objects.all()
 
-    return render(request, "main/evenements.html", context={'evenements': evenements, 'form': form})
+    return render(request, "main/evenements.html", context={'evenements': evenements, 'form': form, 'edit_form': edit_form})
 
 def event_list(request):
     evenements = Evenement.objects.all()
     form = EvenementForm()
-    return render(request, 'main/evenements.html', {'evenements': evenements, 'form': form})
+    edit_form = UpdateEvenementForm()
+    return render(request, 'main/evenements.html', {'evenements': evenements, 'form': form, 'edit_form': edit_form})
 
 def change_event(request, event_id):
     event = get_object_or_404(Evenement, id=event_id)
@@ -35,19 +38,21 @@ def change_event(request, event_id):
         else:
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
-        event_data = {
-            'id': event.id,
-            'nom': event.nom,
-            'nombres_de_places': event.nombres_de_places,
-            'lieu': event.lieu,
-            'ville': event.ville,
-            'pays': event.pays,
-            'prix': event.prix,
-            'rempli': event.rempli,
-            'entree_gratuit': event.entree_gratuit,
-        }
+        event_data = model_to_dict(event)
+        
+        # event_data = {
+        #     'id': event.id,
+        #     'nom': event.nom,
+        #     'nombres_de_places': event.nombres_de_places,
+        #     'lieu': event.lieu,
+        #     'ville': event.ville,
+        #     'pays': event.pays,
+        #     'prix': event.prix,
+        #     'rempli': event.rempli,
+        #     'entree_gratuit': event.entree_gratuit,
+        # }
         return JsonResponse({'event': event_data})
-
+        
 def delete_event(request, event_id):
     event = get_object_or_404(Evenement, id=event_id)
     if request.method == 'POST':

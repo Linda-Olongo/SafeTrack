@@ -47,9 +47,13 @@ class Billets(models.Model):
 
 class Participant(models.Model):
     evenement = models.ForeignKey(Evenement, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
     email = models.EmailField()
     statut = models.CharField(max_length=15, choices=[
         ("pending", _("En attente")),
         ("rejected", _("Rejetée")),
         ("accepted", _("Accepté"))
     ])
+
+    def __str__(self):
+        return f"{self.name}, {self.statut}"

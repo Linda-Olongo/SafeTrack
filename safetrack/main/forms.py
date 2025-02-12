@@ -3,6 +3,12 @@ from django.utils.translation import gettext_lazy as _
 from .models import Evenement
 
 class EvenementForm(forms.ModelForm):
+    participants_file = forms.FileField(
+        required=False,  # Optional file upload
+        label=_("Liste des participants (Excel)"),
+        widget=forms.FileInput(attrs={"class": "form-control"})
+    )
+
     class Meta:
         model = Evenement
         fields = '__all__'  # Include all fields
@@ -59,6 +65,13 @@ class EvenementForm(forms.ModelForm):
         if nombres_de_places is not None and nombres_de_places < 0:
             raise forms.ValidationError(_('Le nombre de places doit être un nombre positif.'))
         return nombres_de_places
+
+    def clean_participants_file(self):
+        file = self.cleaned_data.get("participants_file")
+        if file:
+            if not file.name.endswith((".xls", ".xlsx")):
+                raise forms.ValidationError("Le fichier doit être au format Excel (.xls ou .xlsx).")
+        return file
 
 
 class UpdateEvenementForm(EvenementForm):

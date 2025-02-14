@@ -11,7 +11,7 @@ class EvenementForm(forms.ModelForm):
 
     class Meta:
         model = Evenement
-        fields = '__all__'  # Include all fields
+        # fields = '__all__'  # Include all fields
         labels = {
             'nom': _('Nom de l\'événement'),
             'ville': _('Ville'),
@@ -31,6 +31,7 @@ class EvenementForm(forms.ModelForm):
             "lieu": _("Lieu"),
             "lien": _("Lien")
         }
+        fields = labels.keys()
         textarea = forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
         textinput = forms.TextInput(attrs={'class': 'form-control'})
         numberinput = forms.NumberInput(attrs={'class': 'form-control'})

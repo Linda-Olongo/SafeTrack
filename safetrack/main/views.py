@@ -69,17 +69,6 @@ def change_event(request, event_id):
     else:
         event_data = model_to_dict(event)
         
-        # event_data = {
-        #     'id': event.id,
-        #     'nom': event.nom,
-        #     'nombres_de_places': event.nombres_de_places,
-        #     'lieu': event.lieu,
-        #     'ville': event.ville,
-        #     'pays': event.pays,
-        #     'prix': event.prix,
-        #     'rempli': event.rempli,
-        #     'entree_gratuit': event.entree_gratuit,
-        # }
         return JsonResponse({'event': event_data})
         
 def delete_event(request, event_id):

@@ -4,42 +4,53 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+# Vérifie si ALLOWED_HOSTS est défini et ne contient pas "*"
+host = settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS and settings.ALLOWED_HOSTS[0] != "*" else "localhost"
+
+# Détermine le protocole et le port dynamiquement
+protocol = "https" if not settings.DEBUG else "http"
+port = getattr(settings, "PORT", 8000)  # Utilise un port par défaut si non spécifié
+
+# Construit l'URL dynamique
+base_url = f"{protocol}://{host}:{port}" if settings.DEBUG else f"{protocol}://{host}"
+
+
 # generer le contenu d'un email d'invitation pour un participant
 def send_invitation_email(instance):
     evenement = instance.evenement
 
     subject = _("Invitation à l'événement : {event_name}").format(event_name=evenement.nom)
     message = _(
-    """Bonjour {name},
-
-    Nous avons le plaisir de vous inviter à notre {event_type}. Cet événement est un {event_category} organisé par {organisateur}.
-
-    📅 **Date et heure** :
-    Début : {date_debut}
-    Fin : {date_fin}
-
-    📍 **Lieu** : {lieu}
-    🔗 **Lien** : {lien}
-
-    📝 **Détails** :
-    - Catégorie : {event_category}
-    - Type : {event_type}
-    - Organisateur : {organisateur}
-
-    Nous espérons vous voir bientôt !
-
-    Cordialement,
-    L'équipe d'organisation"""
+        """Bonjour {name},
+    
+        Nous avons le plaisir de vous inviter à notre {event_type}. Cet événement est un {event_category} organisé par {organisateur}.
+    
+        📅 **Date et heure** :
+        Début : {date_debut}
+        Fin : {date_fin}
+    
+        📍 **Lieu** : {lieu}
+        🔗 **Lien** : {lien}
+    
+        📝 **Détails** :
+        - Catégorie : {event_category}
+        - Type : {event_type}
+        - Organisateur : {organisateur}
+    
+        Nous espérons vous voir bientôt !
+    
+        Cordialement,
+        L'équipe d'organisation"""
     ).format(
-            name=instance.name,
-            event_type=evenement.get_type_display(),
-            event_category=evenement.get_categorie_display(),
-            organisateur=evenement.organisateur or _("Non spécifié"),
-            date_debut=evenement.date_heure_debut.strftime("%d/%m/%Y %H:%M"),
-            date_fin=evenement.date_heure_fin.strftime("%d/%m/%Y %H:%M") if evenement.date_heure_fin else _("Non spécifié"),
-            lieu=evenement.lieu or _("Non spécifié"),
-            lien=evenement.lien or _("Aucun lien disponible")
-        )
+        name=instance.name,
+        event_type=evenement.get_type_display(),
+        event_category=evenement.get_categorie_display(),
+        organisateur=evenement.organisateur or _("Non spécifié"),
+        date_debut=evenement.date_heure_debut.strftime("%d/%m/%Y %H:%M"),
+        date_fin=evenement.date_heure_fin.strftime("%d/%m/%Y %H:%M") if evenement.date_heure_fin else _("Non spécifié"),
+        lieu=evenement.lieu or _("Non spécifié"),
+        lien=evenement.lien or _("Aucun lien disponible")
+    )
 
     EMAIL_TEMPLATE = _(
         """<!DOCTYPE html>
@@ -61,11 +72,9 @@ def send_invitation_email(instance):
                 <strong>%(fin)s</strong> %(date_fin)s
             </p>
 
-            <h3>📍 %(lieu_label)s :</h3>
-            <p>%(lieu)s</p>
+            <span><h3>📍 %(lieu_label)s :</h3> <p>%(lieu)s</p></span>    
 
-            <h3>🔗 %(lien_label)s :</h3>
-            <p><a href="%(lien)s" style="color: #1a73e8;">%(lien)s</a></p>
+            <span><h3>🔗 %(lien_label)s :</h3> <p><a href="%(lien)s" style="color: #1a73e8;">%(lien)s</a></p></span>
 
             <h3>📝 %(details_label)s :</h3>
             <ul>
@@ -105,7 +114,8 @@ def send_invitation_email(instance):
         "debut": _("Début :"),
         "date_debut": instance.evenement.date_heure_debut.strftime("%d/%m/%Y %H:%M"),
         "fin": _("Fin :"),
-        "date_fin": instance.evenement.date_heure_fin.strftime("%d/%m/%Y %H:%M") if instance.evenement.date_heure_fin else _("Non spécifié"),
+        "date_fin": instance.evenement.date_heure_fin.strftime(
+            "%d/%m/%Y %H:%M") if instance.evenement.date_heure_fin else _("Non spécifié"),
         "lieu_label": _("Lieu"),
         "lieu": instance.evenement.lieu or _("Non spécifié"),
         "lien_label": _("Lien"),
@@ -119,8 +129,9 @@ def send_invitation_email(instance):
         "team_label": _("L'équipe d'organisation"),
         "accept_label": _("Accepter l'invitation"),
         "reject_label": _("Rejeter l'invitation"),
-        "accept_url": f"http://example.com/events/{instance.evenement.id}/accept/{instance.id}",
-        "reject_url": f"http://example.com/events/{instance.evenement.id}/reject/{instance.id}",
+        "accept_url": f"{base_url}/invitation/{instance.id}/accept/",
+        "reject_url": f"{base_url}/invitation/{instance.id}/reject/",
+
     }
 
     email_html = EMAIL_TEMPLATE % context
@@ -141,4 +152,3 @@ def send_invitation_email(instance):
         logging.error(f"Error sending invitation email, error: {e}")
         instance.invitation_successful = False
         instance.save()
-    

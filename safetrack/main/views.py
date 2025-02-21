@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django.forms.models import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
+# from django.views.decorators.http import require_POST
 
 import pandas as pd
 
@@ -201,28 +202,32 @@ def add_participants(request, event_id):
 
     if request.method == "POST":
         file_form = BulkParticipantUploadForm(request.POST, request.FILES)
-
         data = json.loads(request.body)
 
         if "file" in request.FILES:
             file = file_form.cleaned_data.get("file")
-
             if file:
                 Participant.add_from_excel_file(file)
-            
             return JsonResponse({"message": "Participants uploaded successfully"}, status=200)
 
         elif "participants" in data:
             participants_list = data.get("participants", [])
-
             for p in participants_list:
-                Participant.objects.create(
+                participant = Participant.objects.create(
                     evenement=event, name=p["name"], email=p["email"], statut="pending"
                 )
 
-            return JsonResponse({"message": "Participants added successfully"}, status=200)
-        
+                # Envoi de l'invitation
+                try:
+                    send_invitation_email(participant)
+                except Exception as e:
+                    logging.error(f"❌ Erreur lors de l'envoi de l'email à {p['email']}: {e}")
+                    print(f"❌ Erreur lors de l'envoi de l'email à {p['email']}: {e}")
+
+            return JsonResponse({"message": "Participants added and invitations sent"}, status=200)
+
         return HttpResponse("error", status=500)
+
 
 @login_required
 def update_participant(request, participant_id):
@@ -231,9 +236,9 @@ def update_participant(request, participant_id):
         try:
             data = request.POST
             participant = get_object_or_404(Participant, id=participant_id, evenement__user=request.user)
-            
+
             old_email = participant.email  # Store old email before update
-            
+
             participant.name = data.get("name", participant.name)
             participant.email = data.get("email", participant.email)
             participant.statut = data.get("statut", participant.statut)
@@ -249,3 +254,39 @@ def update_participant(request, participant_id):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+def accept_invitation(request, participant_id):
+    """Accepter une invitation et mettre à jour le statut"""
+    if request.method != "POST":
+        return JsonResponse({"success": False, "message": "Méthode non autorisée."}, status=405)
+
+    participant = get_object_or_404(Participant, id=participant_id, evenement__user=request.user)
+
+    if participant.statut != "accepted":
+        participant.statut = "accepted"
+        participant.invitation_successful = True
+        participant.save()
+        return JsonResponse({"success": True, "message": "Invitation acceptée."})
+
+    return JsonResponse({"success": False, "message": "L'invitation est déjà acceptée."})
+
+
+def reject_invitation(request, participant_id):
+    """Rejeter une invitation et mettre à jour le statut"""
+    if request.method != "POST":
+        return JsonResponse({"success": False, "message": "Méthode non autorisée."}, status=405)
+
+    participant = get_object_or_404(Participant, id=participant_id, evenement__user=request.user)
+
+    if participant.statut != "rejected":
+        participant.statut = "rejected"
+        participant.invitation_successful = False
+        participant.save()
+        return JsonResponse({"success": True, "message": "Invitation rejetée."})
+
+    return JsonResponse({"success": False, "message": "L'invitation est déjà rejetée."})
+
+def invitation_confirmation(request):
+    """Afficher un message de confirmation après une action sur une invitation"""
+    return render(request, "main/confirmation.html")

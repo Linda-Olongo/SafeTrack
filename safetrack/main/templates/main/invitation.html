@@ -1,0 +1,70 @@
+{% for participant in participants %}
+<div>
+    <p><strong>{{ participant.name }}</strong> ({{ participant.email }})</p>
+    <p>Status: <span id="status-{{ participant.id }}">{{ participant.statut }}</span></p>
+
+    <!-- Bouton pour accepter -->
+    <button onclick="respondToInvitation({{ participant.id }}, 'accept')"
+            class="btn btn-primary">✅ Accepter
+    </button>
+
+    <!-- Bouton pour rejeter -->
+    <button onclick="respondToInvitation({{ participant.id }}, 'reject')"
+            class="btn btn-danger">❌ Rejeter
+    </button>
+</div>
+{% endfor %}
+
+<script>
+    // Fonction pour récupérer le token CSRF
+    function getCsrfToken() {
+        let cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith('csrftoken=')) {
+                return cookie.split('=')[1];
+            }
+        }
+        return null;
+    }
+
+    // Fonction pour envoyer une requête pour accepter ou rejeter une invitation
+    function respondToInvitation(participantId, action) {
+        let url = '';
+        if (action === 'accept') {
+            url = `/invitation/${participantId}/accept/`; // URL de la fonction accept_invitation
+        } else if (action === 'reject') {
+            url = `/invitation/${participantId}/reject/`; // URL de la fonction reject_invitation
+        }
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(), // Récupère le CSRF Token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const statusElement = document.getElementById(`status-${participantId}`);
+                if (action === 'accept') {
+                    alert('Invitation acceptée avec succès !');
+                    statusElement.textContent = 'accepted'; // Valeur correcte pour le statut
+                } else if (action === 'reject') {
+                    alert('Invitation rejetée avec succès !');
+                    statusElement.textContent = 'rejected'; // Valeur correcte pour le statut
+                }
+                // Redirection vers une nouvelle page après 2 secondes
+                setTimeout(() => {
+                    window.location.href = "/confirmation-page/"; // Modifier l'URL selon vos besoins
+                }, 2000);
+            } else {
+                alert(data.error || 'Une erreur est survenue !');
+            }
+        })
+        .catch(error => {
+            console.error("Erreur lors de la réponse à l'invitation :", error);
+            alert("Erreur réseau. Veuillez réessayer !");
+        });
+    }
+</script>

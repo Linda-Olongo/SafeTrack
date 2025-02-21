@@ -142,7 +142,9 @@ def events(request, event_id=None):
 
         return render(request, "main/evenements.html", context={'evenements': evenements, 'form': form, 'edit_form': edit_form})
     else:
-        return HttpResponse("Page underway")
+        event = get_object_or_404(Evenement, id=event_id, user=user)
+        
+        return render(request, "main/event_detail.html", {'event': event})
 
 def event_list(request):
     evenements = Evenement.objects.all()

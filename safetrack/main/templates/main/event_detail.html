@@ -1,7 +1,11 @@
 {% extends 'main/sidebar_base.html' %}
 {% load i18n %}
 
+{% block title %}| Event {{ event.id }}{% endblock %}
+
 {% block events_active %}active{% endblock %}
+
+{% block page_title %}Event Detail{% endblock %}
 
 {% block page_content %}
 <section>
@@ -16,7 +20,7 @@
                         <div
                             style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
                             <div>
-                                <h3 class="mb-10">Evenements</h3>
+                                <h3 class="mb-10">Participants</h3>
                             </div>
                             <div class="title d-flex flex-wrap justify-content-end">
                                 <button type="button" class="main-btn primary-btn btn-hover btn-sm"
@@ -33,57 +37,40 @@
                                             <h6>{% trans "Nom" %}</h6>
                                         </th>
                                         <th class="lead-email">
-                                            <h6>{% trans "Ville, pays" %}</h6>
+                                            <h6>{% trans "Adresse mail" %}</h6>
                                         </th>
                                         <th class="lead-phone">
-                                            <h6>{% trans "Prix" %}</h6>
-                                        </th>
-                                        <th class="lead-company">
-                                            <h6>{% trans "Participants/places" %}</h6>
-                                        </th>
-                                        <th class="lead-company">
-                                            <h6>{% trans "Entree libre" %}</h6>
+                                            <h6>{% trans "Statut d'invitation" %}</h6>
                                         </th>
                                         <th>
-                                            <h6>{% trans "Action" %}</h6>
+                                            <h6>{% trans "Actions" %}</h6>
                                         </th>
                                     </tr>
                                     <!-- end table row-->
                                 </thead>
                                 <tbody>
-                                    {% for evenement in evenements %}
+                                    {% for participant in event.participant_set.all %}
                                     <tr>
                                         <td class="min-width">
                                             <div class="lead">
                                                 <div class="lead-text">
-                                                    <a href="{% url 'event-detail' evenement.id %}">{{ evenement.nom }}</a>
+                                                    {{ participant.name }}
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="min-width">
-                                            <p><a href="#0">{{ evenement.ville }}, {{ evenement.pays }}</a></p>
-                                        </td>
-                                        <td class="min-width">
-                                            <p>{{ evenement.prix }}</p>
+                                            <p><a href="#0">{{ participant.email }}</a></p>
                                         </td>
                                         <td class="min-width">
                                             <p>
-                                                {% if evenement.nombres_de_places %}
-                                                {{ evenement.participant_set.count }} / {{ evenement.nombres_de_places }}
-                                                {% else %}
-                                                {{ evenement.participant_set.count }} / {% trans "Non specifie" %}
-                                                {% endif %}
+                                                {{ participant.statut }}
                                             </p>
                                         </td>
                                         <td>
-                                            {% if evenement.entree_gratuit %}
-                                            {% trans "Oui" %}
-                                            {% else %}
-                                            {% trans "Non" %}
-                                            {% endif %}
-                                        </td>
-                                        <td>
                                             <div class="action">
+                                                {% if participant.statut == 'rejected' %}
+                                                <button class="text-primary" data-id="{{ participant.id }}">Renvoyer l'invitation</button>
+                                                {% endif %}
                                                 <button class="text-primary edit-button" data-id="{{ evenement.id }}"
                                                     data-bs-toggle="modal" data-bs-target="#editEventModal">
                                                     <i class="lni lni-pencil"></i>

@@ -13,7 +13,14 @@
     <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
     <div class="container-fluid pt-30">
-        <div class="tables-wrapper">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'events' %}">{% trans "Evenements" %}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ event.nom }}</li>
+            </ol>
+        </nav>
+
+        <div class="tables-wrapper mt-6">
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card-style mb-30">
@@ -24,7 +31,7 @@
                             </div>
                             <div class="title d-flex flex-wrap justify-content-end">
                                 <button type="button" class="main-btn primary-btn btn-hover btn-sm"
-                                    data-bs-toggle="modal" data-bs-target="#eventModal">
+                                    data-bs-toggle="modal" data-bs-target="#participantModal">
                                     <i class="lni lni-plus mr-5"></i> Ajouter
                                 </button>
                             </div>
@@ -59,23 +66,25 @@
                                             </div>
                                         </td>
                                         <td class="min-width">
-                                            <p><a href="#0">{{ participant.email }}</a></p>
+                                            <p>{{ participant.email }}</p>
                                         </td>
                                         <td class="min-width">
-                                            <p>
+                                            <div class="d-flex flex-row gap-3 align-items-center">
                                                 {{ participant.statut }}
-                                            </p>
+
+                                                {% if participant.statut == 'rejected' %}
+                                                <button class="bg-primary text-white rounded-md border-0 py-2 px-3"
+                                                    data-id="{{ participant.id }}">Renvoyer l'invitation</button>
+                                                {% endif %}
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="action">
-                                                {% if participant.statut == 'rejected' %}
-                                                <button class="text-primary" data-id="{{ participant.id }}">Renvoyer l'invitation</button>
-                                                {% endif %}
-                                                <button class="text-primary edit-button" data-id="{{ evenement.id }}"
+                                                <button class="text-primary edit-button" data-id="{{ participant.id }}"
                                                     data-bs-toggle="modal" data-bs-target="#editEventModal">
                                                     <i class="lni lni-pencil"></i>
                                                 </button>
-                                                <button class="text-danger delete-button" data-id="{{ evenement.id }}"
+                                                <button class="text-danger delete-button" data-id="{{ participant.id }}"
                                                     data-nom="{{ evenement.nom }}" data-bs-toggle="modal"
                                                     data-bs-target="#deleteEventModal">
                                                     <i class="lni lni-trash-can"></i>
@@ -104,97 +113,36 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="eventModalLabel">{{ _('Créer un nouvel événement') }}</h5>
+                <h5 class="modal-title" id="eventModalLabel">{{ _('Ajouter des participants') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form method="post" id="eventForm">
                     {% csrf_token %}
-                    <!-- <p>{{ _("Informations generales") }}</p> -->
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="{{ form.nom.id_for_label }}" class="form-label">{{ form.nom.label }}*</label>
-                            {{ form.nom }}
+                        <div class="col-md-8">
+                            <label for="{{ participant_form.name.id_for_label }}" class="form-label">{{
+                                participant_form.name.label }}</label>
+                            {{ participant_form.name }}
                         </div>
-
-                        <div class="col-md-3">
-                            <label for="{{ form.categorie.id_for_label }}" class="form-label">{{ form.categorie.label }}*</label>
-                            {{ form.categorie }}
-                        </div>
-
-                        <div class="col-md-3">
-                            <label for="{{ form.type.id_for_label }}" class="form-label">{{ form.type.label }}*</label>
-                            {{ form.type }}
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="{{ form.organisateur.id_for_label }}" class="form-label">{{ form.organisateur.label }}</label>
-                            {{ form.organisateur }}
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="{{ form.contact.id_for_label }}" class="form-label">{{ form.contact.label }}</label>
-                            {{ form.contact }}
-                        </div>
-
                         <div class="col-md-4">
-                            <label for="{{ form.nombres_de_places.id_for_label }}" class="form-label">{{ form.nombres_de_places.label }}*</label>
-                            {{ form.nombres_de_places }}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="{{ form.lieu.id_for_label }}" class="form-label">{{ form.lieu.label }}*</label>
-                            {{ form.lieu }}
-                        </div>
-                        <div class="col-md-3">
-                            <label for="{{ form.ville.id_for_label }}" class="form-label">{{ form.ville.label }}*</label>
-                            {{ form.ville }}
-                        </div>
-                        <div class="col-md-3">
-                            <label for="{{ form.pays.id_for_label }}" class="form-label">{{ form.pays.label }}*</label>
-                            {{ form.pays }}
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="{{ form.date_heure_debut.id_for_label }}" class="form-label">{{ form.date_heure_debut.label }}</label>
-                            {{ form.date_heure_debut }}
-                        </div>
-                        <div class="col-md-6">
-                            <label for="{{ form.date_heure_fin.id_for_label }}" class="form-label">{{ form.date_heure_fin.label }}</label>
-                            {{ form.date_heure_fin }}
+                            <label for="{{ participant_form.statut.id_for_label }}" class="form-label">{{
+                                participant_form.statut.label }}</label>
+                            <div class="form-check">
+                                {{ participant_form.statut }}
+                            </div>
                         </div>
                         <div class="col-md-12">
-                            <label for="{{ form.lien.id_for_label }}" class="form-label">{{ form.lien.label }}</label>
-                            {{ form.lien }}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="{{ form.prix.id_for_label }}" class="form-label">{{ form.prix.label }}</label>
-                            {{ form.prix }}
-                        </div>
-                        <div class="col-md-4">
-                            <label for="{{ form.rempli.id_for_label }}" class="form-label">{{ form.rempli.label }}</label>
+                            <label for="{{ participant_form.email.id_for_label }}" class="form-label">{{
+                                participant_form.email.label }}</label>
                             <div class="form-check">
-                                {{ form.rempli }}
+                                {{ participant_form.email }}
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="{{ form.entree_gratuit.id_for_label }}" class="form-label">{{ form.entree_gratuit.label }}</label>
-                            <div class="form-check">
-                                {{ form.entree_gratuit }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="{{ form.participants_file.id_for_label }}" class="form-label">{{ form.participants_file.label }}</label>
-                            {{ form.participants_file }}
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler')  }}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler')
+                            }}</button>
                         <button type="submit" class="btn btn-primary">{{ _('Créer') }}</button>
                     </div>
                 </form>
@@ -208,94 +156,34 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editEventModalLabel">{{ _('Modifier l\'événement') }}</h5>
+                <h5 class="modal-title" id="editEventModalLabel">{{ _('Modifier un participant') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form method="post" id="editEventForm">
                     {% csrf_token %}
-                    <input type="hidden" name="id" id="editEventId">
+                    <input type="hidden" name="id" id="editParticipantId">
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="edit_nom" class="form-label">{{ edit_form.nom.label }}</label>
-                            <input type="text" name="nom" id="edit_nom" class="form-control">
-                        </div>
-
-                        <div class="col-md-3">
-                            <label for="{{ form.categorie.id_for_label }}" class="form-label">{{ edit_form.categorie.label }}</label>
-                            {{ edit_form.categorie }}
-                        </div>
-
-                        <div class="col-md-3">
-                            <label for="{{ form.type.id_for_label }}" class="form-label">{{ edit_form.type.label }}</label>
-                            {{ edit_form.type }}
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="{{ form.organisateur.id_for_label }}" class="form-label">{{ edit_form.organisateur.label }}</label>
-                            {{ edit_form.organisateur }}
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="{{ form.contact.id_for_label }}" class="form-label">{{ edit_form.contact.label }}</label>
-                            {{ edit_form.contact }}
-                        </div>
-
-                        <div class="col-md-4">
-                            <label for="edit_nombre_de_places" class="form-label">{{ edit_form.nombres_de_places.label }}</label>
-                            <input type="number" name="nombres_de_places" id="edit_nombre_de_places"
-                                class="form-control">
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="edit_lieu" class="form-label">{{ edit_form.lieu.label }}</label>
-                            <input type="text" name="lieu" id="edit_lieu" class="form-control">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="edit_ville" class="form-label">{{ edit_form.ville.label }}</label>
-                            <input type="text" name="ville" id="edit_ville" class="form-control">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="edit_pays" class="form-label">{{ edit_form.pays.label }}</label>
-                            <input type="text" name="pays" id="edit_pays" class="form-control">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="{{ form.date_heure_debut.id_for_label }}" class="form-label">{{ edit_form.date_heure_debut.label }}</label>
-                            {{ edit_form.date_heure_debut }}
-                        </div>
-                        <div class="col-md-6">
-                            <label for="{{ form.date_heure_fin.id_for_label }}" class="form-label">{{ edit_form.date_heure_fin.label }}</label>
-                            {{ edit_form.date_heure_fin }}
-                        </div>
-                        <div class="col-md-12">
-                            <label for="{{ form.lien.id_for_label }}" class="form-label">{{ edit_form.lien.label }}</label>
-                            {{ edit_form.lien }}
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="edit_prix" class="form-label">{{ edit_form.prix.label }}</label>
-                            <input type="number" step="0.01" name="prix" id="edit_prix" class="form-control">
+                        <div class="col-md-8">
+                            <label for="{{ update_participant_form.name.id_for_label }}" class="form-label">{{ update_participant_form.name.label }}</label>
+                            {{ update_participant_form.name }}
                         </div>
                         <div class="col-md-4">
-                            <label for="edit_rempli" class="form-label">{{ edit_form.rempli.label }}</label>
+                            <label for="{{ update_participant_form.statut.id_for_label }}" class="form-label">{{ update_participant_form.statut.label }}</label>
                             <div class="form-check">
-                                <input type="checkbox" name="rempli" id="edit_rempli" class="form-check-input">
+                                {{ update_participant_form.statut }}
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <label for="edit_entree_gratuit" class="form-label">{{ edit_form.entree_gratuit.label }}</label>
+                        <div class="col-md-12">
+                            <label for="{{ update_participant_form.email.id_for_label }}" class="form-label">{{ update_participant_form.email.label }}</label>
                             <div class="form-check">
-                                <input type="checkbox" name="entree_gratuit" id="edit_entree_gratuit"
-                                    class="form-check-input">
+                                {{ update_participant_form.email }}
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ _('Modifier') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ _('Créer') }}</button>
                     </div>
                 </form>
             </div>
@@ -312,7 +200,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="deleteModalBody">
-                {{ _('Êtes-vous sûr de vouloir supprimer cet événement ?') }}
+                {{ _('Êtes-vous sûr de vouloir supprimer ce participant ?') }}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler') }}</button>
@@ -322,6 +210,124 @@
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="participantModal" tabindex="-1" aria-labelledby="participantModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Participants</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="participantForm">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <!-- <th>Action</th> -->
+                            </tr>
+                        </thead>
+                        <tbody id="participantTable">
+                            <!-- Rows will be dynamically added here -->
+                        </tbody>
+                    </table>
+                    <button type="button" class="btn btn-success" id="addRow">Add Row</button>
+                </form>
+
+                <hr>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <label for="csvFile">Upload Excel File:</label>
+                    <input type="file" id="csvFile" name="file" class="form-control">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitParticipants">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("addRow").addEventListener("click", function () {
+            let table = document.getElementById("participantTable");
+            let newRow = document.createElement("tr");
+
+            newRow.innerHTML = `
+            <td><input type="text" class="form-control name" required></td>
+            <td><input type="email" class="form-control email" required></td>
+            <td><button type="button" class="deleteRow text-danger delete-button border-0 bg-transparent"> <i class="lni lni-trash-can"></i> </button></td>
+        `;
+
+            table.appendChild(newRow);
+        });
+
+        document.getElementById("participantTable").addEventListener("click", function (event) {
+            if (event.target.classList.contains("deleteRow")) {
+                event.target.closest("tr").remove();
+            }
+        });
+
+        document.getElementById("submitParticipants").addEventListener("click", function () {
+            let participants = [];
+            let rows = document.querySelectorAll("#participantTable tr");
+
+            rows.forEach(row => {
+                let name = row.querySelector(".name")?.value;
+                let email = row.querySelector(".email")?.value;
+
+                if (name && email) {
+                    participants.push({ name: name, email: email });
+                }
+            });
+            console.log("Submitting participants data: ")
+            console.log(participants)
+
+            fetch("{% url 'add_participants' event.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ participants: participants })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                })
+                .catch(() => {
+                    alert("Error adding participants");
+                });
+        });
+
+        document.getElementById("uploadCSV").addEventListener("click", function () {
+            let fileInput = document.getElementById("csvFile");
+            let formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+
+            fetch("{% url 'add_participants' event.id %}", {
+                method: "POST",
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                })
+                .catch(() => {
+                    alert("Error uploading file");
+                });
+        });
+    });
+
+</script>
+
+{{ participants_json|json_script:"my-data" }}
+
 <script>
     function formatDate(dateString) {
         const date = new Date(dateString);
@@ -329,6 +335,10 @@
         // Format the date
         return date.toISOString().slice(0, 19);
     }
+
+    console.log("About to get participants")
+    participants = JSON.parse(document.getElementById('my-data').textContent);
+    console.log("Participants are: ")
 
     document.addEventListener("DOMContentLoaded", function () {
         function showToast(message, type) {
@@ -374,69 +384,43 @@
                     "X-Requested-With": "XMLHttpRequest"
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast("{{ _('Événement créé avec succès!') }}", "success");
-                    location.reload();  // Refresh the page or update UI dynamically
-                } else {
-                    let errorDiv = document.getElementById("errorMessages");
-                    errorDiv.innerHTML = ""; // Clear previous errors
-                    for (const [field, errors] of Object.entries(data.errors)) {
-                        errors.forEach(error => {
-                            let errorElement = document.createElement("p");
-                            errorElement.style.color = "red";
-                            errorElement.innerText = `${field}: ${error}`;
-                            errorDiv.appendChild(errorElement);
-                        });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("{{ _('Événement créé avec succès!') }}", "success");
+                        location.reload();  // Refresh the page or update UI dynamically
+                    } else {
+                        let errorDiv = document.getElementById("errorMessages");
+                        errorDiv.innerHTML = ""; // Clear previous errors
+                        for (const [field, errors] of Object.entries(data.errors)) {
+                            errors.forEach(error => {
+                                let errorElement = document.createElement("p");
+                                errorElement.style.color = "red";
+                                errorElement.innerText = `${field}: ${error}`;
+                                errorDiv.appendChild(errorElement);
+                            });
+                        }
                     }
-                }
-            })
-            .catch(error => console.error("Error:", error));
+                })
+                .catch(error => console.error("Error:", error));
         });
 
         // Gestion de la modification d'événement
         document.querySelectorAll(".edit-button").forEach(button => {
             button.addEventListener("click", function () {
-                let eventId = this.getAttribute("data-id");
-                fetch(`/events/${eventId}/change/`, {
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest"
+                let id = this.getAttribute("data-id");
+                for (let index = 0; index < participants.length; index++) {
+                    const element = participants[index];
+                    if (element.id == id) {
+                        document.getElementById("editParticipantId").value = element.id;
+                        document.getElementById('edit_name').value = element.name;
+                        document.getElementById('edit_statut').value = element.statut;
+                        document.getElementById('edit_email').value = element.email;
+                    } else {
+                        console.log(`element id ${element.id} != ${id}`)
                     }
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(`Data gotten from backend`)
-                        console.log(data);
-
-                        document.getElementById("editEventId").value = data.event.id;
-                        document.getElementById("edit_nom").value = data.event.nom;
-                        document.getElementById("edit_nombre_de_places").value = data.event.nombres_de_places;
-                        document.getElementById("edit_lieu").value = data.event.lieu;
-                        document.getElementById("edit_ville").value = data.event.ville;
-                        document.getElementById("edit_pays").value = data.event.pays;
-                        document.getElementById("edit_prix").value = data.event.prix;
-                        document.getElementById("edit_rempli").checked = data.event.rempli;
-                        document.getElementById("edit_entree_gratuit").checked = data.event.entree_gratuit;
-
-                        let field_names = ["categorie", "type", "organisateur", "contact", "date_heure_debut", "date_heure_fin", "lien"]
-
-                        field_names.forEach((field) => {
-                            let value = data.event[field]
-
-                            if (field.startsWith('date')) {
-                                try {
-                                    value = formatDate(value);
-                                } catch (error) {
-                                    value = "";
-                                }
-                            }
-                            console.log(`Setting field edit_${field} to ${value}`)
-                            document.getElementById(`edit_${field}`).value = value
-                        })
-                    })
-                    .catch(error => console.error("Error:", error));
-            });
+                }
+            })
         });
 
         document.getElementById("editEventForm").addEventListener("submit", function (event) {
@@ -445,7 +429,7 @@
             let formData = new FormData(form);
             let eventId = formData.get("id");
 
-            fetch(`/events/${eventId}/change/`, {
+            fetch(`/participants/${eventId}/change/`, {
                 method: "POST",
                 body: formData,
                 headers: {

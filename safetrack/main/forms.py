@@ -1,6 +1,14 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from .models import Evenement
+from .models import Evenement, Participant
+
+
+textarea = forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+textinput = forms.TextInput(attrs={'class': 'form-control'})
+numberinput = forms.NumberInput(attrs={'class': 'form-control'})
+checkboxinput = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+datetimefield = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'})
+
 
 class EvenementForm(forms.ModelForm):
     participants_file = forms.FileField(
@@ -32,11 +40,6 @@ class EvenementForm(forms.ModelForm):
             "lien": _("Lien")
         }
         fields = labels.keys()
-        textarea = forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
-        textinput = forms.TextInput(attrs={'class': 'form-control'})
-        numberinput = forms.NumberInput(attrs={'class': 'form-control'})
-        checkboxinput = forms.CheckboxInput(attrs={'class': 'form-check-input'})
-        datetimefield = forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'})
 
         widgets = {
             'nom': textinput,
@@ -82,3 +85,29 @@ class UpdateEvenementForm(EvenementForm):
         for field_name, field in self.fields.items():
             if "attrs" in field.widget.__dict__:
                 field.widget.attrs['id'] = f"edit_{field_name}"
+
+class ParticipantForm(forms.ModelForm):
+    class Meta:
+        model = Participant
+        fields = '__all__'
+        labels = {
+            'name': _("Nom"),
+            'email': _("Adresse mail"),
+            'statut': _("Statut d'invitation")
+        }
+        widgets = {
+            'name': textinput,
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'statut': forms.Select(choices=Participant.INVITATION_STATUS, attrs={'class': 'form-control select'})
+        }
+
+class UpdateParticipantForm(ParticipantForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        for field_name, field in self.fields.items():
+            if "attrs" in field.widget.__dict__:
+                field.widget.attrs['id'] = f"edit_{field_name}"
+
+class BulkParticipantUploadForm(forms.Form):
+    file = forms.FileField(label="Upload CSV File", required=False)

@@ -51,14 +51,17 @@ class Billets(models.Model):
     date_paye = models.DateField(default=datetime.date.today)
 
 class Participant(models.Model):
-    evenement = models.ForeignKey(Evenement, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    statut = models.CharField(max_length=15, choices=[
+    INVITATION_STATUS = [
         ("pending", _("En attente")),
         ("rejected", _("Rejetée")),
         ("accepted", _("Accepté"))
-    ])
+    ]
+
+    evenement = models.ForeignKey(Evenement, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    statut = models.CharField(max_length=15, choices=INVITATION_STATUS, default="pending")
+    invitation_successful = models.BooleanField(null=True)
 
     def __str__(self):
         return f"{self.name}, {self.statut}"

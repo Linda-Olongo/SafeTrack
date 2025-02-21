@@ -6,6 +6,7 @@ from django.utils import timezone
 import datetime
 from django.utils.translation import gettext_lazy as _
 
+import pandas as pd
 
 class Evenement(models.Model):
     EVENT_TYPES = [
@@ -65,3 +66,19 @@ class Participant(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.statut}"
+
+    @classmethod
+    def add_from_excel_file(cls,file, event):
+        df = pd.read_excel(file)
+
+        for index, row in df.iterrows():
+            email = row.get("Email")
+            name = row.get("Nom")
+
+            if email and name:
+                cls.objects.create(
+                    evenement=event,
+                    email=email,
+                    statut='pending',
+                    name=name
+                )

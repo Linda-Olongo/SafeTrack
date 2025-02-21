@@ -183,7 +183,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ _('Créer') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ _('Modifier') }}</button>
                     </div>
                 </form>
             </div>
@@ -215,7 +215,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Participants</h5>
+                <h5 class="modal-title">Ajouter des Participants</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -232,18 +232,18 @@
                             <!-- Rows will be dynamically added here -->
                         </tbody>
                     </table>
-                    <button type="button" class="btn btn-success" id="addRow">Add Row</button>
+                    <button type="button" class="btn btn-success" id="addRow">Ajoute une ligne</button>
                 </form>
 
-                <hr>
+                <!-- <hr>
                 <form id="uploadForm" enctype="multipart/form-data">
                     <label for="csvFile">Upload Excel File:</label>
                     <input type="file" id="csvFile" name="file" class="form-control">
-                </form>
+                </form> -->
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="submitParticipants">Submit</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Annuler" %}</button>
+                <button type="button" class="btn btn-primary" id="submitParticipants">{% trans "Soumettre" %}</button>
             </div>
         </div>
     </div>

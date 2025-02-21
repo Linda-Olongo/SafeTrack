@@ -205,16 +205,11 @@ def add_participants(request, event_id):
         data = json.loads(request.body)
 
         if "file" in request.FILES:
-            file = request.FILES["file"]
-            decoded_file = file.read().decode("utf-8").splitlines()
-            csv_reader = csv.reader(decoded_file)
-            for row in csv_reader:
-                if len(row) >= 2:
-                    name, email = row[0], row[1]
-                    statut = row[2] if len(row) > 2 else "pending"
-                    Participant.objects.create(
-                        evenement=event, name=name, email=email, statut=statut
-                    )
+            file = file_form.cleaned_data.get("file")
+
+            if file:
+                Participant.add_from_excel_file(file)
+            
             return JsonResponse({"message": "Participants uploaded successfully"}, status=200)
 
         elif "participants" in data:

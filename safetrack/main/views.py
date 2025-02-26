@@ -1,5 +1,6 @@
 import csv
 import json
+import logging
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -172,6 +173,15 @@ def event_list(request):
     return render(request, 'main/evenements.html', {'evenements': evenements, 'form': form, 'edit_form': edit_form})
 
 @login_required
+def event_dashboard(request, event_id):
+    event = Evenement.objects.filter(user=request.user, id=event_id)
+
+    if not event.count():
+        return HttpResponse("You are not allowed to access this resource", status=403)
+    
+    return render(request, "main/event_dashboard.html", {'event': event})
+
+@login_required
 def change_event(request, event_id):
     event = get_object_or_404(Evenement, id=event_id)
     if request.method == 'POST':
@@ -258,10 +268,10 @@ def update_participant(request, participant_id):
 
 def accept_invitation(request, participant_id):
     """Accepter une invitation et mettre à jour le statut"""
-    if request.method != "POST":
-        return JsonResponse({"success": False, "message": "Méthode non autorisée."}, status=405)
+    # if request.method != "POST":
+    #     return JsonResponse({"success": False, "message": "Méthode non autorisée."}, status=405)
 
-    participant = get_object_or_404(Participant, id=participant_id, evenement__user=request.user)
+    participant = get_object_or_404(Participant, id=participant_id)
 
     if participant.statut != "accepted":
         participant.statut = "accepted"
@@ -277,7 +287,7 @@ def reject_invitation(request, participant_id):
     if request.method != "POST":
         return JsonResponse({"success": False, "message": "Méthode non autorisée."}, status=405)
 
-    participant = get_object_or_404(Participant, id=participant_id, evenement__user=request.user)
+    participant = get_object_or_404(Participant, id=participant_id)
 
     if participant.statut != "rejected":
         participant.statut = "rejected"

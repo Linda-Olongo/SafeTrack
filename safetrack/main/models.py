@@ -47,6 +47,29 @@ class Evenement(models.Model):
     def __str__(self):
         return f"{self.nom}: {self.ville}, {self.pays}"
 
+    def get_invitations_with_status(self, status="pending"):
+        status = status.lower()
+        if status not in ["pending", "accepted", 'rejected']:
+            raise ValueError(f"Status must either be pending, accepted or rejected")
+        
+        return self.participant_set.filter(statut=status)
+
+    @property
+    def accepted_invitations(self):
+        return self.get_invitations_with_status("accepted")
+
+    @property
+    def rejected_invitations(self):
+        return self.get_invitations_with_status("rejected")
+
+    @property
+    def pending_invitations(self):
+        return self.get_invitations_with_status("pending")
+
+    @property
+    def nombres_de_places_restantes(self):
+        return self.nombres_de_places - self.participant_set.count()
+
 class Billets(models.Model):
     evenement = models.ForeignKey(Evenement, on_delete=models.CASCADE)
     date_paye = models.DateField(default=datetime.date.today)

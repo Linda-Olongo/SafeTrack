@@ -105,3 +105,13 @@ class Participant(models.Model):
                     statut='pending',
                     name=name
                 )
+
+class Notification(models.Model):
+    message = models.TextField()
+    event = models.ForeignKey(Evenement, on_delete=models.CASCADE)
+
+class ParticipantNotification(models.Model):
+    notification = models.ForeignKey(Notification, on_delete=models.CASCADE)
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
+    envoye_avec_succes = models.BooleanField(default=False)
+    heure_denvoi = models.DateTimeField(auto_now_add=True, null=True)

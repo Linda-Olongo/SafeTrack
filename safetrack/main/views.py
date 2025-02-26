@@ -284,8 +284,8 @@ def accept_invitation(request, participant_id):
 
 def reject_invitation(request, participant_id):
     """Rejeter une invitation et mettre à jour le statut"""
-    if request.method != "POST":
-        return JsonResponse({"success": False, "message": "Méthode non autorisée."}, status=405)
+    # if request.method != "POST":
+    #     return JsonResponse({"success": False, "message": "Méthode non autorisée."}, status=405)
 
     participant = get_object_or_404(Participant, id=participant_id)
 

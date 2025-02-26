@@ -101,9 +101,12 @@
                             </div>
                         </div>
                         <div class="table-wrapper table-responsive">
-                            <table class="table">
+                            <table class="table" id="participants-table">
                                 <thead>
                                     <tr>
+                                        <th>
+                                            <input type="checkbox" id="select-all" class="form-control form-check-input">
+                                        </th>
                                         <th class="lead-info">
                                             <h6>{% trans "Nom" %}</h6>
                                         </th>
@@ -123,6 +126,9 @@
                                     {% for participant in event.participant_set.all %}
                                     <tr>
                                         <td class="min-width">
+                                            <input type="checkbox" class="form-check-input form-control" value="{{ participant.id }}">
+                                        </td>
+                                        <td class="min-width">
                                             <div class="lead">
                                                 <div class="lead-text">
                                                     {{ participant.name }}
@@ -133,13 +139,8 @@
                                             <p>{{ participant.email }}</p>
                                         </td>
                                         <td class="min-width">
-                                            <div class="d-flex flex-row gap-3 align-items-center">
+                                            <div class="d-flex flex-row gap-3 align-items-center ">
                                                 {{ participant.statut }}
-
-                                                {% if participant.statut == 'rejected' %}
-                                                <button class="bg-primary text-white rounded-md border-0 py-2 px-3"
-                                                    data-id="{{ participant.id }}">Renvoyer l'invitation</button>
-                                                {% endif %}
                                             </div>
                                         </td>
                                         <td>
@@ -153,6 +154,11 @@
                                                     data-bs-target="#deleteEventModal">
                                                     <i class="lni lni-trash-can"></i>
                                                 </button>
+
+                                                {% if participant.statut == 'rejected' or not participant.invitation_successful %}
+                                                <button class="bg-primary text-white rounded-md border-0 py-2 px-3"
+                                                    data-id="{{ participant.id }}">Renvoyer l'invitation</button>
+                                                {% endif %}
                                             </div>
                                         </td>
                                     </tr>

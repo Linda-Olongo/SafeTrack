@@ -236,9 +236,80 @@ def event_messages(request, event_id):
             return JsonResponse({"message": "Message ajoute avec succes"}, status=200)
         
         else: # invalid data
-            return JsonResponse({"message": "Erreurs dans la creation du message", "errors": data[1]})
+            return JsonResponse({"message": "Erreurs dans la creation du message", "errors": data[1]}, status=400)
 
     return render(request, "main/event_messages.html", {'event': event})
+
+@login_required
+def modify_message(request, message_id):
+    if request.method == "POST":
+        message = Notification.objects.filter(event__user=request.user, id=message_id).first()
+
+        if not message:
+            return HttpResponse("You are not allowed to access this resource", status=403)
+
+        data = json.loads(request.body)
+
+        data = validate_new_message_data(data, message.event, False)
+
+        if data[0]:
+            data = data[1]
+
+            if "participants" in data:
+                participant_list = set(Participant.objects.filter(participantnotification__notification=message))
+                submitted_participants = set(data['participants'])
+
+                messages = []
+
+                def add_participants(participants):
+                    for participant in participants:
+                            message_sent = ParticipantNotification.objects.create(
+                                notification=message, participant=participant,
+                                envoye_avec_succes=False, heure_denvoi=None
+                            )
+                            messages.append(message_sent)
+
+                def delete_participants(participants):
+                    for p in participants:
+                            ParticipantNotification.objects.filter(participant=p).delete()
+
+                if participant_list != submitted_participants:
+                    # either participant list is a subset of the submitted_participants (participants added)
+                    # submitted participants is a subset of the participant_list (participants removed)
+                    # neither is a subset of the other
+                    
+                    if participant_list.issubset(submitted_participants):
+                        new_participants = submitted_participants - participant_list
+                        # create new model instances
+                        add_participants(new_participants)
+                    elif submitted_participants.issubset(participant_list):
+                        # delete model instances
+                        delete_participants(participant_list - submitted_participants)
+                    else:
+                        items_to_delete = participant_list - submitted_participants
+                        items_to_add = submitted_participants - participant_list
+
+                        delete_participants(items_to_delete)
+                        add_participants(items_to_add)
+
+            if message.subject != data['subject'] or message.message != data['content']:
+                message.subject = data['subject']
+                message.message = data['content']
+                message.save()
+
+                # resend email to everyone
+                messages = ParticipantNotification.objects.filter(notification=message)
+            
+            print(f"Sending messages: ", messages)
+            for m in messages:
+                send_notification_email(m)
+
+            return JsonResponse({"message": "Message modifie avec succes"}, status=200)
+            
+            
+        else:
+            return JsonResponse({"message": "Erreurs dans la modification du message", "errors": data[1]}, status=400)
+
 
 @login_required
 def resend_message(request, message_id):

@@ -1,7 +1,7 @@
 from typing import Dict, Any, Union
 from main.models import Participant
 
-def validate_new_message_data(data: Dict[str, Any], event) -> Union[Dict[str, Any], Dict[str, list]]:
+def validate_new_message_data(data: Dict[str, Any], event, enforce_participants=True) -> Union[Dict[str, Any], Dict[str, list]]:
     errors = {}
     validated_data = {}
 
@@ -21,21 +21,22 @@ def validate_new_message_data(data: Dict[str, Any], event) -> Union[Dict[str, An
     else:
         validated_data["content"] = content
 
-    # Validate participants
-    participants = data.get("participants", [])
-    if not isinstance(participants, list):
-        errors.setdefault("participants", []).append("Must be a list.")
-    elif not participants:
-        errors.setdefault("participants", []).append("At least one participant is required.")
-    else:
-        print("Participants: ", participants)
-        print("event: ", event)
-        valid_participants = list(Participant.objects.filter(id__in=participants, evenement=event).values_list("id", flat=True))
-        invalid_participants = set(participants) - set(valid_participants)
-        
-        if invalid_participants:
-            errors.setdefault("participants", []).append(f"Invalid participant IDs: {list(invalid_participants)}")
+    if enforce_participants:
+        # Validate participants
+        participants = data.get("participants", [])
+        if not isinstance(participants, list):
+            errors.setdefault("participants", []).append("Must be a list.")
+        elif not participants:
+            errors.setdefault("participants", []).append("At least one participant is required.")
         else:
-            validated_data["participants"] = [ Participant.objects.get(id=p) for p in valid_participants ]
+            print("Participants: ", participants)
+            print("event: ", event)
+            valid_participants = list(Participant.objects.filter(id__in=participants, evenement=event).values_list("id", flat=True))
+            invalid_participants = set(participants) - set(valid_participants)
+            
+            if invalid_participants:
+                errors.setdefault("participants", []).append(f"Invalid participant IDs: {list(invalid_participants)}")
+            else:
+                validated_data["participants"] = [ Participant.objects.get(id=p) for p in valid_participants ]
 
     return (True, validated_data) if not errors else (False, errors)

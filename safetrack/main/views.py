@@ -310,20 +310,20 @@ def modify_message(request, message_id):
         else:
             return JsonResponse({"message": "Erreurs dans la modification du message", "errors": data[1]}, status=400)
 
-
 @login_required
 def resend_message(request, message_id):
-    message = Notification.objects.filter(event__user=request.user, id=message_id).first()
+    if request.method == "POST":
+        message = Notification.objects.filter(event__user=request.user, id=message_id).first()
 
-    if not message:
-        return HttpResponse("You are not allowed to access this resource", status=403)
+        if not message:
+            return HttpResponse("You are not allowed to access this resource", status=403)
 
-    unsent_messages = ParticipantNotification.objects.filter(notification=message, envoye_avec_succes=False)
+        messages = ParticipantNotification.objects.filter(notification=message, envoye_avec_succes=False)
 
-    for m in unsent_messages:
-        send_notification_email(m)
-    
-    return redirect("event-messages", message.event.id)
+        for m in messages:
+            send_notification_email(m)
+        
+        return JsonResponse({"message": "Emails renvoyes"}, status=200)
 
 @login_required
 def change_event(request, event_id):

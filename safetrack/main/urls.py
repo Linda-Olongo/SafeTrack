@@ -9,6 +9,7 @@ urlpatterns = [
     path('events/<int:event_id>/messages', views.event_messages, name="event-messages"),
 
     path('messages/<int:message_id>/modify', views.modify_message, name="modify-message"),
+    path('messages/<int:message_id>/resend', views.resend_message, name="resend-message"),
     
     path('events/<int:event_id>/dashboard', views.event_dashboard, name="event-dashboard"),
     path('events/<int:event_id>/change/', views.change_event, name='change_event'),

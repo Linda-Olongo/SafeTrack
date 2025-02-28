@@ -97,8 +97,8 @@
                                                 </button>
 
                                                 {% if message.nombre_destinataires > message.nombre_recu %}
-                                                <button class="text-primary edit-button"
-                                                    data-id="{{ participant.id }}" title="Renvoyer le message">
+                                                <button class="text-primary edit-button resend-message"
+                                                    data-message-id="{{ message.id }}" title="Renvoyer le message">
                                                     <i class="lni lni-reload"></i>
                                                 </button>
                                                 {% endif %}
@@ -297,6 +297,33 @@
             document.getElementById("message-content").value = messageContent
 
             // document.getElementById("deleteModalBody").innerText = `{{ _('Êtes-vous sûr de vouloir supprimer ') }} "${messageName}" {{ _(' ?')}}`;
+        });
+    });
+
+    document.querySelectorAll(".resend-message").forEach(button => {
+        button.addEventListener("click", function () {
+            console.log("Clicked resend message button")
+            let messageId = this.getAttribute("data-message-id");
+
+            displayLoader("En train de renvoyer le message")
+
+            fetch(`/messages/${messageId}/resend`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoader()
+                displayMessage("Message cree avec succes. La page sera rafraichie");
+                setTimeout(() =>location.reload(), 2000 );
+            })
+            .catch(() => {
+                hideLoader()
+                displayMessage("Erreur dans la creation du message", "error");
+            })
         });
     });
 </script>

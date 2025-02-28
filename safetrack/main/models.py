@@ -107,8 +107,21 @@ class Participant(models.Model):
                 )
 
 class Notification(models.Model):
+    subject = models.CharField(max_length=100)
     message = models.TextField()
-    event = models.ForeignKey(Evenement, on_delete=models.CASCADE)
+    event = models.ForeignKey(Evenement, on_delete=models.CASCADE, related_name="notifications")
+
+    @property
+    def nombre_de_destinataires(self):
+        return self.participantnotification_set.count()
+    
+    @property
+    def nombre_recu(self):
+        return self.participantnotification_set.filter(envoye_avec_succes=True).count()
+
+    @property
+    def nombre_destinataires(self):
+        return self.participantnotification_set.count()
 
 class ParticipantNotification(models.Model):
     notification = models.ForeignKey(Notification, on_delete=models.CASCADE)

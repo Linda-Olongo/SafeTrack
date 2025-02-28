@@ -6,17 +6,19 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.forms.models import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-# from django.views.decorators.http import require_POST
+
 
 import pandas as pd
 
 from .forms import EvenementForm, UpdateEvenementForm, ParticipantForm, UpdateParticipantForm, BulkParticipantUploadForm
-from .models import Evenement, Participant
-from main.utils.send_mail import send_invitation_email
+from .models import *
+from main.utils.send_mail import *
+from main.utils.validators import *
 
 def index(request):
     return redirect("events") # change this when dashboard will be created
@@ -180,6 +182,61 @@ def event_dashboard(request, event_id):
         return HttpResponse("You are not allowed to access this resource", status=403)
     
     return render(request, "main/event_dashboard.html", {'event': event})
+
+@login_required
+def event_messages(request, event_id):
+    event = Evenement.objects.filter(user=request.user, id=event_id)
+
+    if not event.count():
+        return HttpResponse("You are not allowed to access this resource", status=403)
+
+    event = event.first()
+
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        data = validate_new_message_data(data, event)
+        print("Data from validation")
+        print(data)
+        if data[0]: # valid data
+            data = data[1]
+            subject, content, participants = data['subject'], data['content'], data['participants']
+
+            message = Notification.objects.create(event=event, subject=subject, message=content)
+
+            messages = []
+
+            for participant in participants:
+                message_sent = ParticipantNotification.objects.create(
+                    notification=message, participant=participant,
+                    envoye_avec_succes=False, heure_denvoi=None
+                )
+                messages.append(message_sent)
+
+            # send emails
+            for m in messages:
+                send_notification_email(m)
+            
+            return JsonResponse({"message": "Message ajoute avec succes"}, status=200)
+        
+        else: # invalid data
+            return JsonResponse({"message": "Erreurs dans la creation du message", "errors": data[1]})
+
+    return render(request, "main/event_messages.html", {'event': event})
+
+@login_required
+def resend_message(request, message_id):
+    message = Notification.objects.filter(event__user=request.user, id=message_id).first()
+
+    if not message:
+        return HttpResponse("You are not allowed to access this resource", status=403)
+
+    unsent_messages = ParticipantNotification.objects.filter(notification=message, envoye_avec_succes=False)
+
+    for m in unsent_messages:
+        send_notification_email(m)
+    
+    return redirect("event-messages", message.event.id)
 
 @login_required
 def change_event(request, event_id):

@@ -3,7 +3,7 @@
 
 {% block title %}| Event {{ event.id }}{% endblock %}
 
-{% block events_active %}active{% endblock %}
+{% block messages_active %}active{% endblock %}
 
 {% block page_title %}Event Detail{% endblock %}
 
@@ -16,73 +16,10 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'events' %}">{% trans "Evenements" %}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ event.nom }}</li>
+                <li class="breadcrumb-item"><a href="{% url 'event-detail' event.id %}">{{ event.nom }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% trans "Messages" %}</li>
             </ol>
         </nav>
-
-        <div class="row">
-            <div class="col-xl-3 col-lg-4 col-sm-6">
-                <div class="icon-card mb-30">
-                  <div class="icon orange">
-                    <i class="lni lni-user"></i>
-                  </div>
-                  <div class="content">
-                    <h6 class="mb-10">Places restantes</h6>
-                    <h3 class="text-bold mb-10">{{ event.nombres_de_places_restantes }}</h3>
-                  </div>
-                </div>
-                <!-- End Icon Cart -->
-            </div>
-
-            <div class="col-xl-3 col-lg-4 col-sm-6">
-              <div class="icon-card mb-30">
-                <div class="icon purple">
-                  <i class="lni lni-cart-full"></i>
-                </div>
-                <div class="content">
-                  <h6 class="mb-10">Invitations acceptees</h6>
-                  <h3 class="text-bold mb-10">{{ event.accepted_invitations.count }} / {{ event.participant_set.count }}</h3>
-                  <!-- <p class="text-sm text-success">
-                    <i class="lni lni-arrow-up"></i> 
-                  </p> -->
-                </div>
-              </div>
-              <!-- End Icon Cart -->
-            </div>
-            <!-- End Col -->
-            <div class="col-xl-3 col-lg-4 col-sm-6">
-              <div class="icon-card mb-30">
-                <div class="icon success">
-                  <i class="lni lni-dollar"></i>
-                </div>
-                <div class="content">
-                  <h6 class="mb-10">Rejetteess</h6>
-                  <h3 class="text-bold mb-10">{{ event.rejected_invitations.count }} / {{ event.participant_set.count }}</h3>
-                  <!-- <p class="text-sm text-success">
-                    <i class="lni lni-arrow-up"></i> +5.45%
-                    <span class="text-gray">Increased</span>
-                  </p> -->
-                </div>
-              </div>
-              <!-- End Icon Cart -->
-            </div>
-            <!-- End Col -->
-            <div class="col-xl-3 col-lg-4 col-sm-6">
-              <div class="icon-card mb-30">
-                <div class="icon primary">
-                  <i class="lni lni-credit-cards"></i>
-                </div>
-                <div class="content">
-                  <h6 class="mb-10">En attente</h6>
-                  <h3 class="text-bold mb-10">{{ event.pending_invitations.count }} / {{ event.participant_set.count }}</h3>
-                  <!-- <p class="text-sm text-danger">
-                    <i class="lni lni-arrow-down"></i> -2.00%
-                    <span class="text-gray">Expense</span>
-                  </p> -->
-                </div>
-              </div>
-            </div>
-          </div>
 
         <div class="tables-wrapper mt-6">
             <div class="row">
@@ -91,12 +28,12 @@
                         <div
                             style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
                             <div>
-                                <h3 class="mb-10">Participants</h3>
+                                <h3 class="mb-10">Messages</h3>
                             </div>
                             <div class="title d-flex flex-wrap justify-content-end">
                                 <button type="button" class="main-btn primary-btn btn-hover btn-sm"
-                                    data-bs-toggle="modal" data-bs-target="#participantModal">
-                                    <i class="lni lni-plus mr-5"></i> Ajouter des participants
+                                    data-bs-toggle="modal" data-bs-target="#eventModal">
+                                    <i class="lni lni-plus mr-5"></i> Envoyer un message
                                 </button>
                             </div>
                         </div>
@@ -105,17 +42,21 @@
                                 <thead>
                                     <tr>
                                         <th>
-                                            <input type="checkbox" id="select-all" class="form-control form-check-input">
+                                            <input type="checkbox" id="select-all" class="form-check-input">
                                         </th>
                                         <th class="lead-info">
-                                            <h6>{% trans "Nom" %}</h6>
+                                            <h6>{% trans "Sujet" %}</h6>
                                         </th>
-                                        <th class="lead-email">
-                                            <h6>{% trans "Adresse mail" %}</h6>
-                                        </th>
+                                        <!-- <th class="lead-email">
+                                            <h6>{% trans "Date cree" %}</h6>
+                                        </th> -->
                                         <th class="lead-phone">
-                                            <h6>{% trans "Statut d'invitation" %}</h6>
+                                            <h6>{% trans "Nombre de dest." %}</h6>
                                         </th>
+                                        <th>
+                                            <h6>{% trans "Nombre recu" %}</h6>
+                                        </th>
+
                                         <th>
                                             <h6>{% trans "Actions" %}</h6>
                                         </th>
@@ -123,26 +64,24 @@
                                     <!-- end table row-->
                                 </thead>
                                 <tbody>
-                                    {% for participant in event.participant_set.all %}
+                                    {% for message in event.notifications.all %}
                                     <tr>
-                                        <td class="min-width">
-                                            <input type="checkbox" class="form-check-input form-control" value="{{ participant.id }}">
+                                        <td>
+                                            <input type="checkbox" class="form-check-input">
                                         </td>
-                                        <td class="min-width">
-                                            <div class="lead">
-                                                <div class="lead-text">
-                                                    {{ participant.name }}
-                                                </div>
-                                            </div>
+
+                                        <td>
+                                            {{ message.subject }}
                                         </td>
-                                        <td class="min-width">
-                                            <p>{{ participant.email }}</p>
+
+                                        <td>
+                                            {{ message.nombre_destinataires }}
                                         </td>
-                                        <td class="min-width">
-                                            <div class="d-flex flex-row gap-3 align-items-center ">
-                                                {{ participant.statut }}
-                                            </div>
+
+                                        <td>
+                                            {{ message.nombre_recu }}
                                         </td>
+
                                         <td>
                                             <div class="action">
                                                 <button class="text-primary edit-button" data-id="{{ participant.id }}"
@@ -155,9 +94,9 @@
                                                     <i class="lni lni-trash-can"></i>
                                                 </button>
 
-                                                {% if participant.statut == 'rejected' or not participant.invitation_successful %}
+                                                {% if message.nombre_destinataires > message.nombre_recu %}
                                                 <button class="text-primary edit-button"
-                                                    data-id="{{ participant.id }}" title="Renvoyer l'invitation">
+                                                    data-id="{{ participant.id }}" title="Renvoyer le message">
                                                     <i class="lni lni-reload"></i>
                                                 </button>
                                                 {% endif %}
@@ -189,32 +128,60 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="post" id="eventForm">
+                <form method="post" id="newMessageForm">
                     {% csrf_token %}
-                    <div class="row mb-3">
-                        <div class="col-md-8">
-                            <label for="{{ participant_form.name.id_for_label }}" class="form-label">{{
-                                participant_form.name.label }}</label>
-                            {{ participant_form.name }}
-                        </div>
-                        <div class="col-md-4">
-                            <label for="{{ participant_form.statut.id_for_label }}" class="form-label">{{
-                                participant_form.statut.label }}</label>
-                            <div class="form-check">
-                                {{ participant_form.statut }}
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="{{ participant_form.email.id_for_label }}" class="form-label">{{
-                                participant_form.email.label }}</label>
-                            <div class="form-check">
-                                {{ participant_form.email }}
-                            </div>
+                    <div class="col-md-12">
+                        <label for="new-message-subject" class="form-label">Sujet du message</label>
+                        <input type="text" class="form-control" name="subject" id="new-message-subject" value="Testing email...">
+                    </div>
+                    <div class="col-md-12">
+                        <label for="new-message-content" class="form-label">Contenu</label>
+                        <div class="form-check" id="">
+                            <textarea name="" class="form-control" id="new-message-content" cols="30" rows="10">
+                                Test text
+                            </textarea>
                         </div>
                     </div>
+
+                    <hr>
+
+                    <table class="table" id="pick-participants-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" class="form-control form-check-input select-all">
+                                </th>
+                                <th class="lead-info">
+                                    <h6>{% trans "Nom" %}</h6>
+                                </th>
+                                <th class="lead-email">
+                                    <h6>{% trans "Adresse mail" %}</h6>
+                                </th>
+                            </tr>
+                            <!-- end table row-->
+                        </thead>
+                        <tbody>
+                            {% for participant in event.participant_set.all %}
+                            <tr>
+                                <td class="min-width">
+                                    <input type="checkbox" class="select-one form-check-input form-control" value="{{ participant.id }}">
+                                </td>
+                                <td class="min-width">
+                                    <div class="lead">
+                                        <div class="lead-text">
+                                            {{ participant.name }}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="min-width">
+                                    <p>{{ participant.email }}</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler')
-                            }}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler') }}</button>
                         <button type="submit" class="btn btn-primary">{{ _('Créer') }}</button>
                     </div>
                 </form>
@@ -223,45 +190,6 @@
     </div>
 </div>
 
-<!-- Modal pour la modification d'événement -->
-<div class="modal fade" id="editEventModal" tabindex="-1" aria-labelledby="editEventModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editEventModalLabel">{{ _('Modifier un participant') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="post" id="editEventForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="id" id="editParticipantId">
-                    <div class="row mb-3">
-                        <div class="col-md-8">
-                            <label for="{{ update_participant_form.name.id_for_label }}" class="form-label">{{ update_participant_form.name.label }}</label>
-                            {{ update_participant_form.name }}
-                        </div>
-                        <div class="col-md-4">
-                            <label for="{{ update_participant_form.statut.id_for_label }}" class="form-label">{{ update_participant_form.statut.label }}</label>
-                            <div class="form-check">
-                                {{ update_participant_form.statut }}
-                            </div>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="{{ update_participant_form.email.id_for_label }}" class="form-label">{{ update_participant_form.email.label }}</label>
-                            <div class="form-check">
-                                {{ update_participant_form.email }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Annuler') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ _('Modifier') }}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Modal pour la confirmation de suppression d'événement -->
 <div class="modal fade" id="deleteEventModal" tabindex="-1" aria-labelledby="deleteEventModalLabel" aria-hidden="true">
@@ -320,6 +248,166 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById("newMessageForm").addEventListener('submit', (e) => {
+        e.preventDefault()
+
+        let messageSubject = document.getElementById("new-message-subject").value;
+        let messageContent = document.getElementById("new-message-content").value;
+
+        let participantIds = document.querySelectorAll('#pick-participants-table input[type="checkbox"]:checked')
+        participantIds = Array.from(participantIds).map(input => parseInt(input.value))
+
+        let data = {
+            "subject": messageSubject,
+            "content": messageContent,
+            "participants": participantIds
+        }
+
+        displayLoader("En train d'envoyer les messages")
+
+        fetch(`{% url 'event-messages' event.id %}`, {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            displayMessage("Message cree avec succes")
+            setTimeout(() =>location.reload(), 5000 ) 
+        })
+        .catch(() => {
+            displayMessage("Erreur dans la creation du message");
+        })
+        .finally(() => {
+            hideLoader()
+        })
+    })
+</script>
+
+<!-- <button type="button" class="main-btn primary-btn btn-hover btn-sm" data-bs-toggle="modal" data-bs-target="#sendEmailModal">
+    <i class="lni lni-plus mr-5"></i>Open test modal
+</button> -->
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="sendEmailModalLabel">Send Email</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="emailForm">
+            <div class="mb-3">
+              <label for="emailSubject" class="form-label">Subject</label>
+              <input type="text" class="form-control" id="emailSubject" required>
+            </div>
+            <div class="mb-3">
+              <label for="emailMessage" class="form-label">Message</label>
+              <textarea class="form-control" id="emailMessage" rows="4" required></textarea>
+            </div>
+            
+            <!-- Selected Participants Display -->
+            <div class="mb-3">
+              <label class="form-label">Selected Participants</label>
+              <div id="selectedParticipants" class="d-flex flex-wrap gap-2"></div>
+            </div>
+  
+            <!-- Search Bar -->
+            <div class="mb-3">
+              <input type="text" id="participantSearch" class="form-control" placeholder="Search participants...">
+            </div>
+            
+            <!-- Participants Table -->
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Select</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody id="participantsTable">
+                  <!-- Dynamically filled with JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" id="sendEmailBtn">Send Email</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const participants = [
+        { id: 1, name: "Alice Doe", email: "alice@example.com" },
+        { id: 2, name: "Bob Smith", email: "bob@example.com" },
+        { id: 3, name: "Charlie Johnson", email: "charlie@example.com" }
+      ];
+  
+      const participantsTable = document.getElementById("participantsTable");
+      const selectedParticipantsDiv = document.getElementById("selectedParticipants");
+      const participantSearch = document.getElementById("participantSearch");
+      let selectedParticipants = [];
+  
+      function renderParticipantsTable(filteredParticipants = participants) {
+        participantsTable.innerHTML = "";
+        filteredParticipants.forEach(participant => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><input type="checkbox" data-id="${participant.id}" data-name="${participant.name}"></td>
+            <td>${participant.name}</td>
+            <td>${participant.email}</td>
+          `;
+          participantsTable.appendChild(row);
+        });
+      }
+  
+      function updateSelectedParticipants() {
+        selectedParticipantsDiv.innerHTML = "";
+        selectedParticipants.forEach(participant => {
+          const pill = document.createElement("span");
+          pill.className = "badge bg-primary p-2";
+          pill.textContent = participant.name;
+          selectedParticipantsDiv.appendChild(pill);
+        });
+      }
+  
+      participantsTable.addEventListener("change", function(event) {
+        const checkbox = event.target;
+        const participantId = checkbox.getAttribute("data-id");
+        const participantName = checkbox.getAttribute("data-name");
+        if (checkbox.checked) {
+          selectedParticipants.push({ id: participantId, name: participantName });
+        } else {
+          selectedParticipants = selectedParticipants.filter(p => p.id !== participantId);
+        }
+        updateSelectedParticipants();
+      });
+  
+      participantSearch.addEventListener("input", function() {
+        const searchTerm = participantSearch.value.toLowerCase();
+        const filteredParticipants = participants.filter(participant =>
+          participant.name.toLowerCase().includes(searchTerm) ||
+          participant.email.toLowerCase().includes(searchTerm)
+        );
+        renderParticipantsTable(filteredParticipants);
+      });
+  
+      renderParticipantsTable();
+    });
+  </script>
+  
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

@@ -1,7 +1,9 @@
 import logging
 
+from asgiref.sync import sync_to_async
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 # Vérifie si ALLOWED_HOSTS est défini et ne contient pas "*"
@@ -14,6 +16,34 @@ port = getattr(settings, "PORT", 8000)  # Utilise un port par défaut si non sp�
 # Construit l'URL dynamique
 base_url = f"{protocol}://{host}:{port}" if settings.DEBUG else f"{protocol}://{host}"
 
+def send_email(subject, body, destinataires, from_email="noreply@example.com"):
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=body,
+        from_email=from_email,
+        to=destinataires
+    )
+    email.send()
+
+def send_notification_email(participantnotification):
+    print(f"Sending email to {participantnotification.participant.email}")
+    try:
+        send_mail(
+            participantnotification.notification.subject, 
+            participantnotification.notification.message, from_email="noreply@example.com", 
+            recipient_list=[participantnotification.participant.email], fail_silently=False
+        )
+        participantnotification.envoye_avec_succes = True
+        participantnotification.heure_denvoi = timezone.now()
+        participantnotification.save()
+    except Exception as e:
+        logging.error("Error sending notification email to participant")
+
+async def send_email_async(subject, body, destinataires, from_email="noreply@example.com"):
+    print(f"Sending emails to {destinataires}")
+    await sync_to_async(send_mail)(
+        subject, body, from_email, destinataires, fail_silently=False
+    )
 
 # generer le contenu d'un email d'invitation pour un participant
 def send_invitation_email(instance):

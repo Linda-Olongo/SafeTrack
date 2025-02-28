@@ -13,12 +13,31 @@
     <link rel="stylesheet" href="{% static 'main/css/materialdesignicons.min.css' %}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{% static 'main/css/fullcalendar.css' %}" />
     <link rel="stylesheet" href="{% static 'main/css/main.css' %}" />
+
+    <script>
+      function displayMessage(message, type="success") {
+        alert(`${message}`)
+      }
+    </script>
 </head>
 <body>
     <!-- <div id="preloader">
         <div class="spinner"></div>
     </div> -->
-
+    <!-- Toast Container -->
+  <div id="toast-container" style="
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 90%;
+    max-width: 400px;
+  "></div>
     <aside class="sidebar-nav-wrapper">
         <div class="navbar-logo">
             <a href="/">
@@ -235,5 +254,11 @@
     <script src="{% static 'main/js/world-merc.js' %}"></script>
     <script src="{% static 'main/js/polyfill.js' %}"></script>
     <script src="{% static 'main/js/main.js' %}"></script>
+
+    <script>
+      document.querySelectorAll('.table .select-all').forEach((selectAllInput) => {
+        
+      })
+    </script>
 </body>
 </html>

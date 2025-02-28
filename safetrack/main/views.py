@@ -11,7 +11,15 @@ from django.utils.translation import gettext_lazy as _
 from django.forms.models import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-
+from django.core.mail import send_mail
+import os
+from django.core.mail import EmailMessage
+from django.utils.timezone import localtime
+from icalendar import Calendar, Event
+from datetime import datetime
+from django.conf import settings
+from django.utils.timezone import localtime
+# from django.views.decorators.http import require_POST
 
 import pandas as pd
 
@@ -21,7 +29,8 @@ from main.utils.send_mail import *
 from main.utils.validators import *
 
 def index(request):
-    return redirect("events") # change this when dashboard will be created
+    return redirect("events")  # change this when dashboard will be created
+
 
 def login_view(request):
     if request.method == "POST":
@@ -84,6 +93,7 @@ def logout_view(request):
     logout(request)
     return redirect("login")
 
+
 def signup(request):
     if request.method == "POST":
         print("POST data")
@@ -107,8 +117,10 @@ def signup(request):
             return redirect("login")
     return render(request, "main/signup.html")
 
+
 def test_view(request):
     return render(request, "main/test.html")
+
 
 @login_required
 def events(request, event_id=None):
@@ -118,7 +130,7 @@ def events(request, event_id=None):
     if not event_id:
         if request.method == 'POST':
             form = EvenementForm(request.POST, request.FILES)
-            
+
             if form.is_valid():
                 evenement = form.save()
                 evenement.user = user
@@ -146,26 +158,28 @@ def events(request, event_id=None):
                 return JsonResponse({'success': True})  # Return success response
 
             return JsonResponse({'success': False, 'errors': form.errors})  # Return validation errors
-        
+
         else:
             form = EvenementForm()
             evenements = Evenement.objects.filter(Q(user=user) | Q(user__isnull=True))
 
-        return render(request, "main/evenements.html", context={'evenements': evenements, 'form': form, 'edit_form': edit_form})
+        return render(request, "main/evenements.html",
+                      context={'evenements': evenements, 'form': form, 'edit_form': edit_form})
     else:
         event = get_object_or_404(Evenement, id=event_id, user=user)
-        
+
         context = {
-            'event': event, 
-            'update_participant_form': UpdateParticipantForm, 
+            'event': event,
+            'update_participant_form': UpdateParticipantForm,
             'participant_form': ParticipantForm,
-            'participants_json': [ model_to_dict(p) for p in event.participant_set.all() ]
+            'participants_json': [model_to_dict(p) for p in event.participant_set.all()]
         }
 
         print("Returning context... ")
         print(context)
 
         return render(request, "main/event_detail.html", context=context)
+
 
 @login_required
 def event_list(request):
@@ -174,14 +188,16 @@ def event_list(request):
     edit_form = UpdateEvenementForm()
     return render(request, 'main/evenements.html', {'evenements': evenements, 'form': form, 'edit_form': edit_form})
 
+
 @login_required
 def event_dashboard(request, event_id):
     event = Evenement.objects.filter(user=request.user, id=event_id)
 
     if not event.count():
         return HttpResponse("You are not allowed to access this resource", status=403)
-    
+
     return render(request, "main/event_dashboard.html", {'event': event})
+
 
 @login_required
 def event_messages(request, event_id):
@@ -241,26 +257,82 @@ def resend_message(request, message_id):
 @login_required
 def change_event(request, event_id):
     event = get_object_or_404(Evenement, id=event_id)
+
     if request.method == 'POST':
         form = EvenementForm(request.POST, instance=event)
         if form.is_valid():
-            form.save()
+            updated_event = form.save()
+
+            # Génération du fichier ICS
+            ics_file_path = generate_ics_file(updated_event)
+
+            # Lien Google Calendar
+            google_calendar_link = f"https://calendar.google.com/calendar/render?action=TEMPLATE&text={updated_event.nom}&dates={updated_event.date_heure_debut.strftime('%Y%m%dT%H%M%S')}/{updated_event.date_heure_fin.strftime('%Y%m%dT%H%M%S')}&location={updated_event.lieu}&details={updated_event.description}"
+
+            # Notifier les participants
+            participants = Participant.objects.filter(evenement=event)
+            for participant in participants:
+                email = EmailMessage(
+                    subject="📅 Mise à jour de l'événement",
+                    body="",
+                    from_email="jamiecho456@gmail.com",
+                    to=[participant.email],
+                )
+
+                email.attach_file(ics_file_path)  # Ajout du fichier ICS en pièce jointe
+                email.content_subtype = "html"
+                email.body = f"""
+                    <div style="font-family: Arial, sans-serif; text-align: center;">
+                        <h2 style="color: #2C3E50;">Mise à jour de l'événement 🎉</h2>
+                        <p>Bonjour <strong>{participant.name}</strong>,</p>
+                        <p>L'événement <strong>{event.nom}</strong> a été modifié. Voici les nouveaux détails :</p>
+                        <p><strong>📆 Date et heure de début :</strong> {updated_event.date_heure_debut}</p>
+                        <p><strong>⌛ Date et heure de fin :</strong> {updated_event.date_heure_fin}</p>
+                        <p><strong>📍 Lieu :</strong> {updated_event.lieu}</p>
+                        <p>Merci de prendre en compte ces modifications.</p>
+                        <p>📅 <a href="{google_calendar_link}" style="color: #007BFF;">Ajouter à Google Calendar</a></p>
+                        <p style="color: #16A085; font-weight: bold;">À bientôt !</p>
+                    </div>
+                """
+                email.send()
+
             return JsonResponse({'success': True})
         else:
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
-        event_data = model_to_dict(event)
-        
-        return JsonResponse({'event': event_data})
-        
+        return JsonResponse({'event': model_to_dict(event)})
+
+
 @login_required
 def delete_event(request, event_id):
     event = get_object_or_404(Evenement, id=event_id)
+
     if request.method == 'POST':
+        participants = Participant.objects.filter(evenement=event)
+
+        for participant in participants:
+            send_mail(
+                subject="⚠️ Annulation de l'événement",
+                message="",
+                html_message=f"""
+                    <div style="font-family: Arial, sans-serif; text-align: center;">
+                        <h2 style="color: #E74C3C;">Événement annulé ❌</h2>
+                        <p>Bonjour <strong>{participant.name}</strong>,</p>
+                        <p>Nous avons le regret de vous informer que l'événement <strong>{event.nom}</strong> a été annulé.</p>
+                        <p>Nous nous excusons pour la gêne occasionnée.</p>
+                        <p style="color: #E67E22; font-weight: bold;">Merci de votre compréhension.</p>
+                    </div>
+                """,
+                from_email="jamiecho456@gmail.com",
+                recipient_list=[participant.email],
+                fail_silently=False,
+            )
+
         event.delete()
         return JsonResponse({'success': True})
     else:
         return JsonResponse({'success': False})
+
 
 @login_required
 def add_participants(request, event_id):
@@ -322,6 +394,17 @@ def update_participant(request, participant_id):
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+@login_required
+def delete_participant(request, participant_id):
+    if request.method == "DELETE":
+        participant = get_object_or_404(Participant, id=participant_id)
+        participant.delete()
+
+        return JsonResponse({"success": True, "message": "Participant supprimé avec succès."})
+
+    return JsonResponse({"success": False, "message": "Méthode non autorisée."}, status=405)
+
+
 
 def accept_invitation(request, participant_id):
     """Accepter une invitation et mettre à jour le statut"""
@@ -353,6 +436,7 @@ def reject_invitation(request, participant_id):
         return JsonResponse({"success": True, "message": "Invitation rejetée."})
 
     return JsonResponse({"success": False, "message": "L'invitation est déjà rejetée."})
+
 
 def invitation_confirmation(request):
     """Afficher un message de confirmation après une action sur une invitation"""
